@@ -63,15 +63,21 @@ CHIP_ERROR PlatformManagerImpl::_InitChipStack()
     // Arrange for CHIP-encapsulated ESP32 errors to be translated to text
     Internal::ESP32Utils::RegisterESP32ErrorFormatter();
 
+#if !CONFIG_CHIP_USE_OT_ENDPOINT
+    esp_err_t err = ESP_OK;
+
     // Initialize TCP/IP network interface, which internally initializes LwIP stack. We have to
     // call this before the usage of PacketBufferHandle::New() because in case of LwIP-based pool
     // allocator, the LwIP pool allocator uses the LwIP stack.
-    esp_err_t err = esp_netif_init();
+    err = esp_netif_init();
     VerifyOrReturnError(err == ESP_OK, Internal::ESP32Utils::MapError(err));
+#endif
 
     // Arrange for the ESP event loop to deliver events into the CHIP Device layer.
+#if !CONFIG_CHIP_USE_OT_ENDPOINT
     err = esp_event_handler_register(IP_EVENT, ESP_EVENT_ANY_ID, PlatformManagerImpl::HandleESPSystemEvent, nullptr);
     VerifyOrReturnError(err == ESP_OK, Internal::ESP32Utils::MapError(err));
+#endif
 
     mStartTime = System::SystemClock().GetMonotonicTimestamp();
     ReturnErrorOnFailure(chip::Crypto::add_entropy_source(app_entropy_source, nullptr, 16));
@@ -98,8 +104,10 @@ void PlatformManagerImpl::_Shutdown()
 
     Internal::GenericPlatformManagerImpl_FreeRTOS<PlatformManagerImpl>::_Shutdown();
 
+#if !CONFIG_CHIP_USE_OT_ENDPOINT
     esp_event_handler_unregister(IP_EVENT, ESP_EVENT_ANY_ID, PlatformManagerImpl::HandleESPSystemEvent);
     esp_netif_deinit();
+#endif
 }
 
 void PlatformManagerImpl::HandleESPSystemEvent(void * arg, esp_event_base_t eventBase, int32_t eventId, void * eventData)
@@ -109,6 +117,9 @@ void PlatformManagerImpl::HandleESPSystemEvent(void * arg, esp_event_base_t even
     event.Type                         = DeviceEventType::kESPSystemEvent;
     event.Platform.ESPSystemEvent.Base = eventBase;
     event.Platform.ESPSystemEvent.Id   = eventId;
+#if !CONFIG_CHIP_USE_OT_ENDPOINT
+    bool handled = false;
+
     if (eventBase == IP_EVENT)
     {
         ChipLogProgress(DeviceLayer, "Posting ESPSystemEvent: IP Event with eventId : %ld", eventId);
@@ -179,6 +190,7 @@ void PlatformManagerImpl::HandleESPSystemEvent(void * arg, esp_event_base_t even
     {
         ChipLogProgress(DeviceLayer, "Posting ESPSystemEvent with eventId : %ld", eventId);
     }
+#endif
     sInstance.PostEventOrDie(&event);
 }
 

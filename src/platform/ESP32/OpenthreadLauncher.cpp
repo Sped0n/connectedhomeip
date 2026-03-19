@@ -19,12 +19,16 @@
 #include "driver/uart.h"
 #include "esp_event.h"
 #include "esp_log.h"
+#if !CONFIG_CHIP_USE_OT_ENDPOINT
 #include "esp_netif.h"
 #include "esp_netif_types.h"
+#endif
 #include "esp_openthread.h"
 #include "esp_openthread_cli.h"
 #include "esp_openthread_lock.h"
+#if !CONFIG_CHIP_USE_OT_ENDPOINT
 #include "esp_openthread_netif_glue.h"
+#endif
 #include "esp_openthread_types.h"
 #include "esp_vfs_eventfd.h"
 #include "freertos/FreeRTOS.h"
@@ -40,10 +44,13 @@
 #include <esp_openthread_border_router.h>
 #endif
 
-static esp_netif_t * openthread_netif                       = nullptr;
 static esp_openthread_platform_config_t * s_platform_config = nullptr;
 static TaskHandle_t openthread_task                         = nullptr;
 static const char * TAG                                     = "OpenThread";
+
+#if !CONFIG_CHIP_USE_OT_ENDPOINT
+static esp_netif_t * openthread_netif = nullptr;
+#endif
 
 #ifdef CONFIG_OPENTHREAD_CLI
 static TaskHandle_t cli_transmit_task                     = nullptr;
@@ -129,6 +136,7 @@ static void cli_command_transmit_task_delete(void)
 }
 #endif
 
+#if !CONFIG_CHIP_USE_OT_ENDPOINT
 static esp_netif_t * init_openthread_netif(const esp_openthread_platform_config_t * config)
 {
     esp_netif_config_t cfg = ESP_NETIF_DEFAULT_OPENTHREAD();
@@ -138,6 +146,7 @@ static esp_netif_t * init_openthread_netif(const esp_openthread_platform_config_
 
     return netif;
 }
+#endif
 
 static void ot_task_worker(void * context)
 {
@@ -178,7 +187,6 @@ esp_err_t openthread_init_stack(void)
         .max_fds = 3,
     };
 
-    ESP_ERROR_CHECK(esp_netif_init());
     esp_err_t err = esp_vfs_eventfd_register(&eventfd_config);
     if (err == ESP_ERR_INVALID_STATE)
     {

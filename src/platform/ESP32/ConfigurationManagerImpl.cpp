@@ -272,7 +272,7 @@ CHIP_ERROR ConfigurationManagerImpl::GetLocationCapability(uint8_t & location)
 
     return err;
 #else
-    location       = static_cast<uint8_t>(chip::app::Clusters::GeneralCommissioning::RegulatoryLocationTypeEnum::kIndoor);
+    location = static_cast<uint8_t>(chip::app::Clusters::GeneralCommissioning::RegulatoryLocationTypeEnum::kIndoor);
     return CHIP_NO_ERROR;
 #endif // CONFIG_ENABLE_ESP32_LOCATIONCAPABILITY
 }
@@ -459,11 +459,13 @@ void ConfigurationManagerImpl::DoFactoryReset(intptr_t arg)
     CHIP_ERROR err;
 
     // Unregistering the wifi and IP event handlers from the esp_default_event_loop()
+#if !CONFIG_CHIP_USE_OT_ENDPOINT
     err = ESP32Utils::MapError(esp_event_handler_unregister(IP_EVENT, ESP_EVENT_ANY_ID, PlatformManagerImpl::HandleESPSystemEvent));
     if (err != CHIP_NO_ERROR)
     {
         ChipLogError(DeviceLayer, "Failed to unregister IP event handler");
     }
+#endif
 
 #if CHIP_DEVICE_CONFIG_ENABLE_WIFI
     err =
