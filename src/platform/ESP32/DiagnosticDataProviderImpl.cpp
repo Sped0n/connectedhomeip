@@ -193,7 +193,7 @@ CHIP_ERROR DiagnosticDataProviderImpl::GetNetworkInterfaces(NetworkInterface ** 
     esp_netif_t * netif     = esp_netif_next(NULL);
     NetworkInterface * head = NULL;
     uint8_t ipv6_addr_count = 0;
-    esp_ip6_addr_t ip6_addr[LWIP_IPV6_NUM_ADDRESSES];
+    esp_ip6_addr_t ip6_addr[CONFIG_LWIP_IPV6_NUM_ADDRESSES];
     if (netif == NULL)
     {
         ChipLogError(DeviceLayer, "Failed to get network interfaces");

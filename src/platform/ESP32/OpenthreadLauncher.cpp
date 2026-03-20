@@ -144,8 +144,11 @@ static void ot_task_worker(void * context)
     // Run the main loop
     esp_openthread_launch_mainloop();
 
+#if !CONFIG_CHIP_USE_OT_ENDPOINT
     esp_netif_destroy(openthread_netif);
+    openthread_netif = nullptr;
     esp_openthread_netif_glue_deinit();
+#endif
 
     esp_vfs_eventfd_unregister();
     vTaskDelete(NULL);
@@ -198,7 +201,9 @@ esp_err_t openthread_init_stack(void)
     cli_command_transmit_task();
 #endif
     // Initialize the esp_netif bindings
+#if !CONFIG_CHIP_USE_OT_ENDPOINT
     openthread_netif = init_openthread_netif(s_platform_config);
+#endif
     return ESP_OK;
 }
 
@@ -210,8 +215,11 @@ esp_err_t openthread_launch_task(void)
 
 esp_err_t openthread_deinit_stack(void)
 {
+#if !CONFIG_CHIP_USE_OT_ENDPOINT
     esp_openthread_netif_glue_deinit();
     esp_netif_destroy(openthread_netif);
+    openthread_netif = nullptr;
+#endif
 #ifdef CONFIG_OPENTHREAD_CLI
     cli_command_transmit_task_delete();
 #endif

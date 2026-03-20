@@ -313,8 +313,13 @@ struct netif * ESP32Utils::GetNetif(const char * ifKey)
 
 bool ESP32Utils::IsInterfaceUp(const char * ifKey)
 {
+#if CONFIG_CHIP_USE_OT_ENDPOINT
+    esp_netif_t * netif_handle = esp_netif_get_handle_from_ifkey(ifKey);
+    return netif_handle != NULL && esp_netif_is_netif_up(netif_handle);
+#else
     struct netif * netif = GetNetif(ifKey);
     return netif != NULL && netif_is_up(netif);
+#endif
 }
 
 bool ESP32Utils::HasIPv6LinkLocalAddress(const char * ifKey)

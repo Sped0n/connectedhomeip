@@ -753,6 +753,21 @@ menu "CHIP Device Layer"
             help
                 Stack size of Thread task.
 
+        config CHIP_USE_OT_ENDPOINT
+            bool "Use OpenThread UDP/TCP stack directly"
+            default n
+            depends on ENABLE_MATTER_OVER_THREAD
+            help
+                Build CHIP to use native OpenThread endpoints instead of the lwIP endpoint backend.
+                This is intended for Thread-only images.
+
+        config CHIP_WITH_LWIP
+            bool "CHIP with lwIP library available"
+            default y
+            help
+                Keep CHIP built with lwIP support. Disable this when using CHIP_USE_OT_ENDPOINT for
+                a Thread-only prototype.
+
     endmenu
 
     menu "Ethernet Options"
